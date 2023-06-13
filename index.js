@@ -12,19 +12,19 @@ app.use(express.json());
 const verifyJWT = (req, res, next) => {
     const authorization = req.headers.authorization;
     if (!authorization) {
-      return res.status(401).send({ error: true, message: 'unauthorized access' });
+        return res.status(401).send({ error: true, message: 'unauthorized access' });
     }
     // bearer token
     const token = authorization.split(' ')[1];
-  
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).send({ error: true, message: 'unauthorized access' })
-      }
-      req.decoded = decoded;
-      next();
+        if (err) {
+            return res.status(401).send({ error: true, message: 'unauthorized access' })
+        }
+        req.decoded = decoded;
+        next();
     })
-  }
+}
 
 
 //mongo start
@@ -49,6 +49,8 @@ async function run() {
         const usersCollection = client.db("melodyDB").collection("users");
         const instructorsCollection = client.db("melodyDB").collection("instructors");
         const reviewsCollection = client.db("melodyDB").collection("reviews");
+        const classesCollection = client.db("melodyDB").collection("classes");
+        const cartCollection = client.db("melodyDB").collection("carts");
 
         app.post('/jwt', (req, res) => {
             const user = req.body;
@@ -74,6 +76,12 @@ async function run() {
         //***users read***
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
+            res.send(result);
+        })
+
+        //***classes read***
+        app.get('/classes', async (req, res) => {
+            const result = await classesCollection.find().toArray();
             res.send(result);
         })
 
