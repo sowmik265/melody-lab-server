@@ -52,6 +52,7 @@ async function run() {
         const classesCollection = client.db("melodyDB").collection("classes");
         const cartCollection = client.db("melodyDB").collection("carts");
 
+        //JWT creation
         app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
@@ -86,11 +87,15 @@ async function run() {
         })
 
         //***specific users cart read***
-        app.get('/carts', async (req, res) => {
+        app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
             console.log(email);
             if (!email) {
                 res.send([])
+            }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
             }
             const query = { email: email }
             const result = await cartCollection.find(query).toArray();
