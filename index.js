@@ -112,6 +112,16 @@ async function run() {
             res.send(result);
         })
 
+        //***instructor verifc read***
+        app.get('/users/instructor/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const query = { email: email }
+            const user = await usersCollection.findOne(query);
+            const result = { instructor: user?.role === 'instructor' }
+            res.send(result);
+        })
+
         //***specific users cart read***
         app.get('/carts', verifyJWT, async (req, res) => {
             const email = req.query.email;
@@ -127,6 +137,51 @@ async function run() {
             const result = await cartCollection.find(query).toArray();
             res.send(result);
         })
+
+        //***specific instructors class read***
+        app.get('/classes', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                res.send([])
+            }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const query = { email: email }
+            const result = await classesCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //***specific users payment read***
+        app.get('/payments', verifyJWT, async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                res.send([])
+            }
+            const decodedEmail = req.decoded.email;
+            if (email !== decodedEmail) {
+                return res.status(403).send({ error: true, message: 'forbidden access' })
+            }
+            const query = { email: email }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //***payment read***
+        app.get('/payments', async (req, res) => {
+            const email = req.query.email;
+            console.log(email);
+            if (!email) {
+                res.send([])
+            }
+            const query = { email: email }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        })
+
 
         //POST operations
 
@@ -147,13 +202,18 @@ async function run() {
         app.post('/carts', async (req, res) => {
             const item = req.body;
             const result = await cartCollection.insertOne(item)
-            res.send = result;
+            res.send(result);
         })
 
+        //***class post****
+        app.post('/classes', async (req, res) => {
+            const newItem = req.body;
+            const result = await classesCollection.insertOne(newItem)
+            res.send(result);
+        })
 
         //UPDATE operations
-        //***user profile post****
-
+        //***user role update(make admin)****
         app.patch('/users/admin/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
@@ -165,8 +225,39 @@ async function run() {
 
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.send(result);
-
         })
+
+        //***user role update(make instructor)****
+        app.patch('/users/instructor/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'instructor'
+                },
+            };
+
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+
+        //***class status update(make approved)****
+        app.patch('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    status: 'approved'
+                },
+            };
+
+            const result = await classesCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })
+
+
+
 
 
         //DELETE operations
@@ -177,6 +268,26 @@ async function run() {
             const result = await cartCollection.deleteOne(query);
             res.send(result);
         })
+
+        //***user delete****
+        app.delete('/users/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await usersCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //***class delete****
+        app.delete('/classes/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await classesCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
+
+
 
 
         // payment intent
@@ -204,11 +315,6 @@ async function run() {
 
             res.send({ insertResult, deleteResult });
         })
-
-
-
-
-
 
 
 
